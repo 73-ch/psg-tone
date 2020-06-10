@@ -7,6 +7,9 @@
     <button @click="square125">square125</button>
     <button @click="triangle">triangle</button>
     <button @click="noise">noise</button>
+    <div>
+      <input type="number" v-model="frequency">
+    </div>
   </div>
 </template>
 
@@ -28,7 +31,7 @@ export default {
     square() {
       this.squ = this.ctx.createOscillator();
       this.squ.type = "square";
-      this.squ.frequency.value = 440;
+      this.squ.frequency.value = this.frequency;
       this.squ.connect(this.ctx.destination);
       this.squ.start();
     },
@@ -45,7 +48,7 @@ export default {
     triangle() {
       this.tri = this.ctx.createOscillator();
       this.tri.type = "triangle";
-      this.tri.frequency.value = 90;
+      this.tri.frequency.value = this.frequency;
 
       this.bufSize = 1024;
       this.scrproc = this.ctx.createScriptProcessor(this.bufSize);
