@@ -3,20 +3,27 @@
     <button @click="start">start</button>
     <button @click="stop">stop</button>
     <button @click="square">square</button>
+    <button @click="square25">square25</button>
+    <button @click="square125">square125</button>
     <button @click="triangle">triangle</button>
     <button @click="noise">noise</button>
   </div>
 </template>
 
 <script>
+import Tone from "tone";
+
 export default {
   name: "Home",
+  data() {
+    return {frequency: 440};
+  },
   mounted() {
     this.player = null;
   },
   methods: {
     start() {
-      this.ctx = new AudioContext();
+      Tone.context = this.ctx = new AudioContext();
     },
     square() {
       this.squ = this.ctx.createOscillator();
@@ -24,6 +31,16 @@ export default {
       this.squ.frequency.value = 440;
       this.squ.connect(this.ctx.destination);
       this.squ.start();
+    },
+    square25() {
+      this.squ25 = new Tone.PulseOscillator(this.frequency, 0.25);
+      this.squ25.toMaster();
+      this.squ25.start();
+    },
+    square125() {
+      this.squ125 = new Tone.PulseOscillator(this.frequency, 0.125);
+      this.squ125.toMaster();
+      this.squ125.start();
     },
     triangle() {
       this.tri = this.ctx.createOscillator();
@@ -69,6 +86,8 @@ export default {
     stop() {
       if (this.tri) this.tri.stop();
       if (this.squ) this.squ.stop();
+      if (this.squ25) this.squ25.stop();
+      if (this.squ125) this.squ125.stop();
       if (this.scrproc) this.scrproc.disconnect();
       if (this.noise_osc) delete this.noise_osc.disconnect();
       // this.player.stop();
