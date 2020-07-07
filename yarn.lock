@@ -3396,6 +3396,11 @@ etag@~1.8.1:
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
 
+euclidean-rhythms@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/euclidean-rhythms/-/euclidean-rhythms-2.0.1.tgz#35e2855fdeff600a2259f14a8a8f188477a00828"
+  integrity sha512-rI6/DLfI4Rjqrtl2eMNnQ6hWamauBviwhjpIHhLxIM9wDi39YUyM4FGxVNo5+ibHHQ2JdJKvCNYzSGCCxDz8dA==
+
 event-pubsub@4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/event-pubsub/-/event-pubsub-4.3.0.tgz#f68d816bc29f1ec02c539dc58c8dd40ce72cb36e"

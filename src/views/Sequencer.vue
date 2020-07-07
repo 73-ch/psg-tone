@@ -1,11 +1,13 @@
 <template>
   <div>
+    <p class="tone-transport"></p>
     <button @click="start">start</button>
   </div>
 </template>
 
 <script>
 import Tone from "tone";
+import ER from "euclidean-rhythms";
 
 export default {
   name: "Sequencer",
@@ -60,25 +62,43 @@ export default {
       //   console.log(time, value);
       // }, tones);
 
+      // part.start(0);
+
       const BPM = Math.floor(Math.random() * 30) + 90;
       const lenTT = "32:0:0";
       const lenSix = this.tt2Six(lenTT);
       console.log(lenTT, lenSix);
 
+      Tone.Transport.BPM = BPM;
       Tone.Transport.loop = true;
       Tone.Transport.loopEnd = lenTT;
       Tone.Transport.start(0);
-      // part.start(0);
 
-      // Tone.Transport.setLoopPoints()
-      // let len =
+      // random snare
 
-      for (let i = 0; i < 200; i++) {
-        if (Math.random() > 0.3) {
-          console.log(this.six2TT(Math.floor(Math.random() * lenSix)));
-          Tone.Transport.schedule(function (time) {
-            ampEnv.triggerAttackRelease("32t", time);
-          }, this.six2TT(Math.floor(Math.random() * lenSix)));
+      // for (let i = 0; i < 200; i++) {
+      //   if (Math.random() > 0.3) {
+      //     console.log(this.six2TT(Math.floor(Math.random() * lenSix)));
+      //     Tone.Transport.schedule(function (time) {
+      //       ampEnv.triggerAttackRelease("32t", time);
+      //     }, this.six2TT(Math.floor(Math.random() * lenSix)));
+      //   }
+      // }
+
+      for (let i = 0; i < lenSix / 128; i++) {
+        const b = 4 * Math.pow(2, Math.floor(Math.random() * 3));
+        const a = Math.floor(Math.random() * b);
+
+        const pattern = ER.getPattern(a, b);
+        console.log(a, b, pattern);
+        for (let j = 0; j < 8; j++) {
+          for (let k = 0; k < pattern.length; k++) {
+            if (pattern[k]) {
+              Tone.Transport.schedule(function (time) {
+                ampEnv.triggerAttackRelease("32t", time);
+              }, this.six2TT(i * 128 + j * 16 + k * (16 / pattern.length)));
+            }
+          }
         }
       }
 
