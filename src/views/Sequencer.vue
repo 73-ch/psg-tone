@@ -85,17 +85,24 @@ export default {
       //   }
       // }
 
-      for (let i = 0; i < lenSix / 128; i++) {
-        const b = 4 * Math.pow(2, Math.floor(Math.random() * 3));
-        const a = Math.floor(Math.random() * b);
+      const b = 4 * Math.pow(2, Math.floor(Math.random() * 3));
+      const a = Math.floor(Math.random() * b);
+      const pattern = ER.getPattern(a, b).map((e) => [e, Math.random()]);
 
-        const pattern = ER.getPattern(a, b);
-        console.log(a, b, pattern);
+      const lowFrequency = 200 + (Math.random() * 50) ** 2;
+      const highFrequency = lowFrequency + 5000 + 2500 * Math.random();
+
+      for (let i = 0; i < lenSix / 128; i++) {
+        if (Math.random() < 0.3) continue;
+        const freqThreshold = Math.floor(Math.random() * 3) * 0.5;
+        console.log(freqThreshold);
         for (let j = 0; j < 8; j++) {
           for (let k = 0; k < pattern.length; k++) {
-            if (pattern[k]) {
+            if (pattern[k][0]) {
               Tone.Transport.schedule(function (time) {
-                ampEnv.triggerAttackRelease("32t", time);
+                ampEnv.triggerAttackRelease("16t", time);
+                filter.frequency.value =
+                  pattern[k][1] > freqThreshold ? highFrequency : lowFrequency;
               }, this.six2TT(i * 128 + j * 16 + k * (16 / pattern.length)));
             }
           }
@@ -117,8 +124,8 @@ export default {
       // );
       //
       // sequence.start(0);
-    },
-  },
+    }
+  }
 };
 </script>
 
