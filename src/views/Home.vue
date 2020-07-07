@@ -84,7 +84,12 @@ export default {
         }
       });
 
-      this.noise_osc.connect(this.ctx.destination);
+      this.bandpass = this.ctx.createBiquadFilter();
+      this.bandpass.type = "bandpass";
+      this.bandpass.frequency.value = this.frequency;
+
+      this.noise_osc.connect(this.bandpass);
+      this.bandpass.connect(this.ctx.destination);
     },
     stop() {
       if (this.tri) this.tri.stop();
