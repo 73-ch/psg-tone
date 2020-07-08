@@ -13,9 +13,7 @@ export default {
   name: "Sequencer",
   methods: {
     six2TT(sixteenths) {
-      return `${Math.floor(sixteenths / 16)}:${Math.floor(
-        (sixteenths % 16) / 4
-      )}:${sixteenths % 4}`;
+      return `${Math.floor(sixteenths / 16)}:${Math.floor((sixteenths % 16) / 4)}:${sixteenths % 4}`;
     },
     tt2Six(tt) {
       return tt.split(":").reduce((s, e) => s * 4 + parseInt(e));
@@ -48,7 +46,7 @@ export default {
         attack: 0.01,
         decay: 0.1,
         sustain: 0.1,
-        release: 0.01,
+        release: 0.01
       }).toMaster();
 
       filter.connect(ampEnv);
@@ -67,7 +65,6 @@ export default {
       const BPM = Math.floor(Math.random() * 30) + 90;
       const lenTT = "32:0:0";
       const lenSix = this.tt2Six(lenTT);
-      console.log(lenTT, lenSix);
 
       Tone.Transport.BPM = BPM;
       Tone.Transport.loop = true;
@@ -89,24 +86,61 @@ export default {
       const a = Math.floor(Math.random() * b);
       const pattern = ER.getPattern(a, b).map((e) => [e, Math.random()]);
 
+      console.log(pattern);
+
       const lowFrequency = 200 + (Math.random() * 50) ** 2;
       const highFrequency = lowFrequency + 5000 + 2500 * Math.random();
 
       for (let i = 0; i < lenSix / 128; i++) {
         if (Math.random() < 0.3) continue;
         const freqThreshold = Math.floor(Math.random() * 3) * 0.5;
-        console.log(freqThreshold);
         for (let j = 0; j < 8; j++) {
           for (let k = 0; k < pattern.length; k++) {
             if (pattern[k][0]) {
               Tone.Transport.schedule(function (time) {
                 ampEnv.triggerAttackRelease("16t", time);
-                filter.frequency.value =
-                  pattern[k][1] > freqThreshold ? highFrequency : lowFrequency;
+                filter.frequency.value = pattern[k][1] > freqThreshold ? highFrequency : lowFrequency;
               }, this.six2TT(i * 128 + j * 16 + k * (16 / pattern.length)));
             }
           }
         }
+      }
+
+      // melody
+      const C = ["C3", "E3", "G3"];
+      const Dm = ["D3", "F3", "A4"];
+      const G = ["G3", "B4", "D4"];
+      const cords = [C, Dm, G];
+
+      let squ125 = new Tone.PulseOscillator("C3", 0.125).start();
+      squ125.volume.value = -25;
+      const squ125Env = new Tone.AmplitudeEnvelope({
+        attack: Math.random() * 0.4,
+        decay: Math.random() * 0.4,
+        sustain: Math.random() * 0.4,
+        release: Math.random() * 0.4
+      }).toMaster();
+
+      squ125.connect(squ125Env);
+
+      for (let i = 0; i < lenSix / 4; i++) {
+        const tar = Math.floor(Math.random() * cords.length);
+        for (let j = 0; j < 3; j++) {
+          Tone.Transport.schedule(function (time) {
+            let pattern = new Tone.Pattern(function (t, note) {
+              // console.log(note, t);
+              squ125.frequency.value = note;
+              squ125Env.triggerAttackRelease(C[Math.floor(Math.random() * 3)], 0.25);
+            }, cords[tar]);
+            pattern.start(time);
+          }, this.six2TT(i * 4+j));
+        }
+        //
+        // Tone.Transport.schedule(function (time) {
+        //   let pattern = new Tone.Pattern(function (time, note) {
+        //     squ125Env.triggerAttackRelease(C[Math.floor(Math.random()*3)], "+"+);
+        //   }, cords[tar]);
+        // }, this.six2TT(i * 4));
       }
 
       setInterval(() => {
