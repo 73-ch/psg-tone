@@ -110,30 +110,92 @@ export default {
       const C = ["C3", "E3", "G3"];
       const Dm = ["D3", "F3", "A4"];
       const G = ["G3", "B4", "D4"];
-      const cords = [C, Dm, G];
+      const Em = ["E3", "G3", "B3"];
+      const cords = [C, Em, G];
 
-      let squ125 = new Tone.PulseOscillator("C3", 0.125).start();
+      let squ125 = new Tone.PulseOscillator("C3", 0.25).start();
       squ125.volume.value = -25;
       const squ125Env = new Tone.AmplitudeEnvelope({
-        attack: Math.random() * 0.4,
-        decay: Math.random() * 0.4,
-        sustain: Math.random() * 0.4,
-        release: Math.random() * 0.4
+        attack: Math.random() * 0.4 + 0.01,
+        decay: Math.random() * 0.4 + 0.01,
+        sustain: Math.random() * 0.4 + 0.01,
+        release: Math.random() * 0.4 + 0.01
       }).toMaster();
 
       squ125.connect(squ125Env);
+      const tar = Math.floor(Math.random() * cords.length);
 
       for (let i = 0; i < lenSix / 4; i++) {
-        const tar = Math.floor(Math.random() * cords.length);
+        // for (let j = 0; j < 3; j++) {
+        Tone.Transport.schedule(function (time) {
+          let pattern = new Tone.Pattern(
+            function (t, note) {
+              console.log(note, time);
+              console.log(note);
+              squ125.frequency.value = note;
+              squ125Env.triggerAttackRelease(t);
+            },
+            cords[tar],
+            "up"
+          );
+          pattern.start(time);
+        }, this.six2TT(i * 4));
+        // }
+        //
+        // Tone.Transport.schedule(function (time) {
+        //   let pattern = new Tone.Pattern(function (time, note) {
+        //     squ125Env.triggerAttackRelease(C[Math.floor(Math.random()*3)], "+"+);
+        //   }, cords[tar]);
+        // }, this.six2TT(i * 4));
+      }
+
+      // bass
+
+      const bC = ["C1", "E1", "G1"];
+      const bDm = ["D1", "F1", "A2"];
+      const bG = ["G1", "B2", "D2"];
+      const bEm = ["E1", "G1", "B1"];
+      const basscords = [bC, bEm, bG];
+
+      let tri = this.ctx.createOscillator();
+      tri.type = "triangle";
+      tri.frequency.value = 200;
+
+      this.bufSize = 1024;
+      this.scrproc = this.ctx.createScriptProcessor(this.bufSize);
+
+      this.scrproc.addEventListener("audioprocess", (e) => {
+        const in0 = e.inputBuffer.getChannelData(1);
+        const buf0 = e.outputBuffer.getChannelData(0);
+        const buf1 = e.outputBuffer.getChannelData(1);
+        for (let i = 0; i < this.bufSize; ++i) {
+          buf0[i] = buf1[i] = Math.floor((in0[i] + 1.0) * 8.0) / 8.0 - 1.0;
+        }
+      });
+
+      tri.connect(this.scrproc);
+      const triEnv = new Tone.AmplitudeEnvelope({
+        attack: Math.random() * 0.1 + 0.01,
+        decay: Math.random() * 0.05 + 0.01,
+        sustain: 0.01,
+        release: Math.random() * 0.1 + 0.01
+      }).toMaster();
+
+      Tone.connect(tri, triEnv);
+
+      tri.start();
+
+      for (let i = 0; i < lenSix / 4; i++) {
         for (let j = 0; j < 3; j++) {
           Tone.Transport.schedule(function (time) {
             let pattern = new Tone.Pattern(function (t, note) {
-              // console.log(note, t);
-              squ125.frequency.value = note;
-              squ125Env.triggerAttackRelease(C[Math.floor(Math.random() * 3)], 0.25);
+              console.log(note, time);
+              console.log(note);
+              tri.frequency.value = Tone.Frequency(note);
+              triEnv.triggerAttackRelease(t);
             }, cords[tar]);
             pattern.start(time);
-          }, this.six2TT(i * 4+j));
+          }, this.six2TT(i * 4));
         }
         //
         // Tone.Transport.schedule(function (time) {
