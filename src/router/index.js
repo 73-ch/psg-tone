@@ -3,6 +3,7 @@ import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import CompareNoise from "@/views/CompareNoise";
 import Sequencer from "@/views/Sequencer";
+import Sequencer2 from "@/views/Sequencer2";
 
 Vue.use(VueRouter);
 
@@ -21,6 +22,11 @@ const routes = [
     path: "/sequencer",
     name: "Sequencer",
     component: Sequencer
+  },
+  {
+    path: "/sequencer2",
+    name: "Sequencer2",
+    component: Sequencer2
   }
 ];
 
