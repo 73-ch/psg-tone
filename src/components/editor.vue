@@ -15,6 +15,10 @@ export default {
     this.editor = ace.edit("editor");
     this.editor.getSession().setMode("ace/mode/javascript");
     this.editor.setTheme("ace/theme/monokai");
+
+    this.editor.getSession().on("change", e => {
+      this.$emit("change", this.editor.getValue());
+    });
   }
 };
 </script>
