@@ -2,5 +2,7 @@
   "printWidth": 120,
   "number-leading-zero": "never",
   "no-unused-vars": "never",
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "space-before-function-paren": "never"
 }
