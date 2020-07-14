@@ -1,6 +1,6 @@
 import Tone from "tone";
-
-export default class NoiseOscillator8bit {
+// Tone.Synthを継承させる
+export default class EightBitNoiseSynth {
   constructor(ctx) {
     this.ctx = ctx;
 
@@ -21,17 +21,23 @@ export default class NoiseOscillator8bit {
     });
 
     //make an autofilter to shape the noise
-    const filter = new Tone.Filter(800, "bandpass");
+    this.filter = new Tone.Filter(800, "bandpass");
 
     //connect the noise
-    Tone.connect(this.noise_osc, filter);
-    const ampEnv = new Tone.AmplitudeEnvelope({
+    Tone.connect(this.noise_osc, this.filter);
+    this.envelope = new Tone.AmplitudeEnvelope({
       attack: 0.01,
       decay: 0.1,
       sustain: 0.1,
-      release: 0.01,
+      release: 0.01
     }).toMaster();
 
-    filter.connect(ampEnv);
+    this.filter.connect(this.envelope);
+  }
+
+  triggerAttackRelease(note, time) {
+    this.filter.frequency = note;
+
+    this.envelope.triggerAttackRelease(time);
   }
 }

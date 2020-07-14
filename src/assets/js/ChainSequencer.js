@@ -29,7 +29,11 @@ export default class ChainSequencer extends Tone.Sequence {
       if (this.next) {
         if (this.next !== this) {
           this.next.start(time);
+          console.log(time);
           this.stop(time);
+        } else {
+          this.cancel(0);
+          this.next.start(time);
         }
 
         this.count = 0;

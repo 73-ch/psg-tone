@@ -1,16 +1,36 @@
 <template>
   <div>
     <div>
+      <span style="color: red; font-size: 30px;">最初に必ずstartをクリックしろ</span>
+      <br />
       <button @click="start">start</button>
+      <button @click="stop">stop</button>
+      bpm: <input type="number" @input="bpmChanged" /> bfreq: <input type="number" v-model="bfreq" min="1" max="15" />
+      <br />
+      pattern gen: <input id="generated" type="text" size="100" />
+      <button @click="generate">generate</button>
     </div>
     <editor class="editor" @change="sourceChanged"></editor>
+    <p>name:synth type:pattern:next synth name;</p>
   </div>
 </template>
 
 <script>
+import ER from "euclidean-rhythms";
 import editor from "@/components/editor";
 import ChainSequencer from "@/assets/js/ChainSequencer";
 import Tone from "tone";
+
+// ド3 -> C3
+const ja2en = {
+  A: "ラ",
+  B: "シ",
+  C: "ド",
+  D: "レ",
+  E: "ミ",
+  F: "ファ",
+  G: "ソ"
+};
 
 export default {
   name: "Sequencer2",
@@ -18,14 +38,17 @@ export default {
   data: function () {
     return {
       audioStarted: false,
-      sequences: []
+      sequences: {},
+      synths: {},
+      bfreq: 4
     };
   },
   methods: {
     start() {
-      this.sequences = [];
+      // this.sequences = [];
+      // this.synths = {};
 
-      this.synth = new Tone.Synth({
+      const triangle = new Tone.Synth({
         oscillator: { type: "triangle" },
         envelope: {
           attack: 0.005,
@@ -34,43 +57,111 @@ export default {
           release: 1
         }
       }).toMaster();
+      this.synths["triangle"] = triangle;
+
+      const sine = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: {
+          attack: 0.1,
+          decay: 0.05,
+          sustain: 0.4,
+          release: 0.5
+        }
+      }).toMaster();
+      this.synths["sine"] = sine;
+
+      const noise = new Tone.NoiseSynth({
+        noise: {
+          type: "white"
+        },
+        envelope: {
+          attack: 0.005,
+          decay: 0.1,
+          sustain: 0
+        }
+      }).toMaster();
+      this.synths["noise"] = noise;
 
       Tone.Transport.start();
       this.audioStarted = true;
 
-      this.synth.triggerAttackRelease("C4", "8n");
+      Tone.Transport.bpm.value = 80;
+
+      // this.synth.triggerAttackRelease("C4", "8n");
+    },
+    stop() {
+      Tone.Transport.stop();
+    },
+    generate() {
+      const tar = document.querySelector("#generated");
+
+      const rhythm = ER.getPattern(Math.floor(parseInt(this.bfreq) + Math.random() * 3 - 1), 16);
+      console.log(rhythm);
+
+      const pattern = rhythm.map(e => {
+        if (e) {
+          return Object.values(ja2en)[Math.floor(Math.random() * 7)] + Math.floor(Math.random() * 4 + 1);
+        } else {
+          return "";
+        }
+      });
+
+      const synth = Object.keys(this.synths)[Math.floor(Math.random() * Object.keys(this.synths).length)];
+      const name = synth + Math.floor(Math.random() * 10);
+      tar.value = `${name}:${synth}:${pattern.join(",")}:${name};`;
+    },
+    bpmChanged(e) {
+      // this.stop();
+      Tone.Transport.bpm.value = e.target.value;
+      // this.start();
     },
     sourceChanged(value) {
       // if (!this.audioStarted) return;
-      for (let s of this.sequences) {
+      for (let s of Object.values(this.sequences)) {
         s.stop();
       }
 
-      this.sequences = [];
+      this.sequences = {};
 
-      const test_pattern = `d3,,,,d3,,,,d3,,,,d3,,,;\nc3,,,,c3,,,,c3,,,,c3,,,;`;
+      const test_pattern = `tri1:noise:シ3,,,ド4,,ラ1,,ミ3,,,ド4,,ファ2,,ファ2,:tri1;`;
 
-      let text = test_pattern.replace(" ", "").replace("\n", "");
+      let text = value.replace(/(\s|\n)/g, "");
 
-      // ド3 -> C3
-      const ja2en = {
-        A: "ラ",
-        B: "シ",
-        C: "ド",
-        D: "レ",
-        E: "ミ",
-        F: "ファ",
-        G: "ソ"
-      };
+      const sequence_sources = text.split(";");
 
-      for (let k of Object.keys(ja2en)) {
-        text.replace(ja2en[k], k);
-      }
+      // 一時的に次のsynthの文字列をいれて置く用
+      const tmp_nexts = {};
 
-      const sequences = text.split(";");
+      const start_sequences = [];
 
-      for (let s of sequences) {
-        const arr = s.split(",");
+      for (let s of sequence_sources) {
+        if (s.length === 0) continue;
+        // params: [name, synthType, notes]
+
+        let name;
+        let start_flag = false;
+
+        let params = s.split(":");
+
+        if (params[0].charAt(0) === "!") {
+          name = params[0].slice(1);
+          start_flag = true;
+        } else {
+          name = params[0];
+        }
+
+        console.log(this.synths[params[1]], params[1]);
+        if (!this.synths[params[1]]) {
+          console.log("synth type is wrong.");
+          continue;
+        }
+
+        for (let k of Object.keys(ja2en)) {
+          const r = new RegExp(ja2en[k], "g");
+          params[2] = params[2].replace(r, k);
+        }
+
+        const arr = params[2].split(",");
         // sequenceの長さのチェック
         if (arr.length !== 16) {
           console.log("pattern length must be 16.");
@@ -84,25 +175,39 @@ export default {
           continue;
         }
 
-        this.sequences.push(
-          new ChainSequencer((time, note) => {
-            console.log(note, time, Tone.Transport.position);
-            if (note !== "") {
-              this.synth.triggerAttackRelease(note, "8n", time);
+        this.sequences[name] = new ChainSequencer((time, note) => {
+          console.log(note, time, Tone.Transport.position);
+          if (note !== "") {
+            if (params[1] === "noise") {
+              this.synths[params[1]].triggerAttackRelease("8n", time);
+            } else {
+              this.synths[params[1]].triggerAttackRelease(note, "8n", time);
             }
-          }, arr)
-        );
+          }
+        }, arr);
 
-        // とりあえず，次のやつに繋いでる
-        if (this.sequences.length >= 2) {
-          this.sequences[this.sequences.length - 2].next = this.sequences[this.sequences.length - 1];
-        }
+        if (start_flag) start_sequences.push(name);
+
+        tmp_nexts[name] = params[3];
       }
 
-      // とりあえず，最後のやつを最初のやつに繋いでループ
-      if (this.sequences.length > 0) {
-        this.sequences[this.sequences.length - 1].next = this.sequences[0];
-        this.sequences[0].start();
+      // nextの部分をつなぐ処理
+      for (let name of Object.keys(tmp_nexts)) {
+        if (!this.sequences[tmp_nexts[name]]) {
+          console.log(`${name} synth's next synth '${tmp_nexts[name]}' is wrong.`);
+          continue;
+        }
+
+        this.sequences[name].next = this.sequences[tmp_nexts[name]];
+      }
+
+      // とりあえず，最初のやつをスタート
+      // if (Object.keys(this.sequences).length > 0) {
+      //   this.sequences[Object.keys(this.sequences)[0]].start();
+      // }
+
+      for (let name of start_sequences) {
+        this.sequences[name].start();
       }
 
       console.log(this.sequences);
@@ -113,7 +218,7 @@ export default {
 
 <style scoped>
 .editor {
-  width: 500px;
-  height: 600px;
+  width: 900px;
+  height: 300px;
 }
 </style>
