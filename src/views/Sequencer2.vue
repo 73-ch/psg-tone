@@ -37,9 +37,9 @@ export default {
   components: { editor },
   data: function () {
     return {
-      audioStarted: false,
-      sequences: {},
-      synths: {},
+      audioStarted: false, // audioコンテキストの初期化が行われているか
+      sequences: {}, // 現在再生中の各シーケンス
+      synths: {}, // シンセ
       bfreq: 4
     };
   },
@@ -48,6 +48,7 @@ export default {
       // this.sequences = [];
       // this.synths = {};
 
+      // 各シンセの生成
       const triangle = new Tone.Synth({
         oscillator: { type: "triangle" },
         envelope: {
@@ -92,6 +93,7 @@ export default {
     stop() {
       Tone.Transport.stop();
     },
+    // シーケンスの文字列を自動生成する関数
     generate() {
       const tar = document.querySelector("#generated");
 
@@ -117,6 +119,7 @@ export default {
     },
     sourceChanged(value) {
       // if (!this.audioStarted) return;
+      // 今再生しているシンセを全て停止
       for (let s of Object.values(this.sequences)) {
         s.stop();
       }
@@ -132,10 +135,13 @@ export default {
       // 一時的に次のsynthの文字列をいれて置く用
       const tmp_nexts = {};
 
+      // 最初にスタートするシーケンスを格納するための配列
       const start_sequences = [];
 
+      // 各行を一つのシーケンスとして処理
       for (let s of sequence_sources) {
         if (s.length === 0) continue;
+        // paramsの中身は下
         // params: [name, synthType, notes]
 
         let name;
@@ -143,6 +149,8 @@ export default {
 
         let params = s.split(":");
 
+        // !が付いていたら最初に再生するためのフラグを設定
+        // 同時にシーケンスの名前を作成
         if (params[0].charAt(0) === "!") {
           name = params[0].slice(1);
           start_flag = true;
@@ -150,12 +158,14 @@ export default {
           name = params[0];
         }
 
+        // 指定されたシンセがリストに無ければメッセージを出力して終了
         console.log(this.synths[params[1]], params[1]);
         if (!this.synths[params[1]]) {
           console.log("synth type is wrong.");
           continue;
         }
 
+        // 日本語表記から英語表記への変換
         for (let k of Object.keys(ja2en)) {
           const r = new RegExp(ja2en[k], "g");
           params[2] = params[2].replace(r, k);
@@ -175,7 +185,9 @@ export default {
           continue;
         }
 
+        // Sequencerの設定,シーケンス一つにつき，シーケンサーを一つ作成している
         this.sequences[name] = new ChainSequencer((time, note) => {
+          // Sequencerの中では単純にセットされたnoteを元にシンセを再生するように設定
           console.log(note, time, Tone.Transport.position);
           if (note !== "") {
             if (params[1] === "noise") {
@@ -201,7 +213,7 @@ export default {
         this.sequences[name].next = this.sequences[tmp_nexts[name]];
       }
 
-      // とりあえず，最初のやつをスタート
+      // とりあえず，最初のパターンをスタート
       // if (Object.keys(this.sequences).length > 0) {
       //   this.sequences[Object.keys(this.sequences)[0]].start();
       // }

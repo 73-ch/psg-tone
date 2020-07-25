@@ -22,7 +22,7 @@ export default {
       this.noise_osc = this.ctx.createScriptProcessor(1024);
 
       let ni = 0;
-      this.noise_osc.addEventListener("audioprocess", (e) => {
+      this.noise_osc.addEventListener("audioprocess", e => {
         const out0 = e.outputBuffer.getChannelData(0);
         const out1 = e.outputBuffer.getChannelData(1);
         for (let i = 0; i < 1024; ++i, ni = (ni + 1) % 44100) {
@@ -39,7 +39,7 @@ export default {
         attack: 0.01,
         decay: 0.1,
         sustain: 0.1,
-        release: 0.01,
+        release: 0.01
       }).toMaster();
 
       filter.connect(ampEnv);
@@ -57,14 +57,14 @@ export default {
         attack: 0.01,
         decay: 0.1,
         sustain: 0.1,
-        release: 0.01,
+        release: 0.01
       }).toMaster();
 
       filter.connect(ampEnv);
       noise.start();
       ampEnv.triggerAttackRelease("32t");
-    },
-  },
+    }
+  }
 };
 </script>
 

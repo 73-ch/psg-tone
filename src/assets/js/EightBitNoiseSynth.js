@@ -12,7 +12,7 @@ export default class EightBitNoiseSynth {
     this.noise_osc = this.ctx.createScriptProcessor(1024);
 
     let ni = 0;
-    this.noise_osc.addEventListener("audioprocess", (e) => {
+    this.noise_osc.addEventListener("audioprocess", e => {
       const out0 = e.outputBuffer.getChannelData(0);
       const out1 = e.outputBuffer.getChannelData(1);
       for (let i = 0; i < 1024; ++i, ni = (ni + 1) % 44100) {
