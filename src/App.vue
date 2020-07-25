@@ -1,5 +1,11 @@
 <template>
   <div id="app">
+    <ul>
+      <li><router-link to="/">ファミコンオシレータデモ</router-link></li>
+      <li><router-link to="/sequencer">パターン自動生成デモ（途中）</router-link></li>
+      <li><router-link to="/sequencer2">テキストベースシーケンサプロトタイプ</router-link></li>
+      <li><router-link to="/compare_noise">ノイズオシレータの比較</router-link></li>
+    </ul>
     <router-view />
   </div>
 </template>
